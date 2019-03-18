@@ -1,5 +1,5 @@
-var EstimoteBeacon = require("nativescript-estimote-beacon").EstimoteBeacon;
-var estimoteBeacon = new EstimoteBeacon();
+var EstimoteProximityBeacon = require("nativescript-estimote-beacon").EstimoteProximityBeacon;
+var estimoteBeacon = new EstimoteProximityBeacon();
 
 describe("greet function", function() {
     it("exists", function() {

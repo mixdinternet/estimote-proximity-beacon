@@ -1,5 +1,4 @@
 import * as utils from 'tns-core-modules/utils/utils';
-import { android } from 'tns-core-modules/application';
 
 declare const com: any;
 declare const kotlin: any;
@@ -9,25 +8,43 @@ const CloudCredentials = com.estimote.proximity_sdk.api.EstimoteCloudCredentials
 const ProximityObserverBuilder = com.estimote.proximity_sdk.api.ProximityObserverBuilder;
 const ProximityZoneBuilder = com.estimote.proximity_sdk.api.ProximityZoneBuilder;
 
-const kotlinFn0 = kotlin.jvm.functions.Function0;
 const kotlinFn1 = kotlin.jvm.functions.Function1;
 
-export class EstimoteBeacon {
+export interface ZoneContext {
+
+  getAttachments(): Function;
+  getDeviceId(): Function;
+  getTag(): string;
+}
+
+export interface ObserverOptions {
+
+  onEnterRegion: Function;
+  onExitRegion: Function;
+  regionTag: string;
+}
+
+export class EstimoteProximityBeacon {
 
   private _cloudCredentials;
   private _proximityObserver;
-  private _zone;
 
-  constructor() {
+  constructor(appId, appToken) {
 
-    // Credentials está sendo criado normalmente
-    this._cloudCredentials = new CloudCredentials(
-        'beacon2019test-2e7',
-        'b293cd03afe1df3d2a0d1b323aa89777',
-    );
+    if (!appId) {
+
+      throw new Error('Application ID is needed');
+    }
+
+    if (!appToken) {
+
+      throw new Error('Application TOKEN is needed');
+    }
+
+    this._cloudCredentials = new CloudCredentials(appId, appToken);
   }
 
-  startObserving() {
+  startObserving({ onEnterRegion, onExitRegion, regionTag }: ObserverOptions) {
 
     try {
 
@@ -45,16 +62,28 @@ export class EstimoteBeacon {
           .build();
 
       const zone = new ProximityZoneBuilder()
-          .forTag('desks')
+          .forTag(regionTag)
           .inNearRange()
           .onEnter(new kotlinFn1({
-            invoke: function () {
-              console.log('Execute something entering on region');
+            invoke: function (zoneContext: ZoneContext) {
+
+              if (onEnterRegion) {
+
+                onEnterRegion();
+              }
+
+              console.log('Entered in region');
             },
           }))
           .onExit(new kotlinFn1({
-            invoke: function () {
-              console.log('Execute something exiting on region');
+            invoke: function (zoneContext: ZoneContext) {
+
+              if (onExitRegion) {
+
+                onExitRegion();
+              }
+
+              console.log('Out of region');
             },
           }))
           .build();
